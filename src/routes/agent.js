@@ -30,9 +30,13 @@ router.post("/enroll", async (req, res) => {
       command_poll_interval_seconds: 20
     });
   } catch (err) {
-    console.error("Enroll error:", err);
-    res.status(500).json({ error: "enroll failed" });
-  }
+  console.error("Ingest error FULL:", err);
+  res.status(500).json({
+    error: "ingest failed",
+    details: err.message
+  });
+}
+
 });
 
 /**
