@@ -9,7 +9,7 @@ const cors = require("cors");
 // Import routes
 const eventsRoutes = require("./routes/events");
 const dashboardRoutes = require("./routes/dashboard"); // <- existing
-const assistantRoutes = require("./routes/assistant"); // ✅ ADD THIS
+// const assistantRoutes = require("./routes/assistant"); // ✅ ADD THIS
 
 const app = express();
 const agentRoutes = require("./routes/agent");
@@ -33,7 +33,7 @@ mongoose.connect(process.env.MONGO_URI)
     // Connect routes AFTER MongoDB is connected
     app.use("/api/events", eventsRoutes);
     app.use("/api", dashboardRoutes); // <- existing
-    app.use("/api/assistant", assistantRoutes); // ✅ ADD THIS
+    // app.use("/api/assistant", assistantRoutes); // ✅ ADD THIS
 
     // Start server
     app.listen(process.env.PORT, () => {
