@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
 
 const AgentSchema = new mongoose.Schema({
-  agentId: { type: String, unique: true },
+  agent_id: { type: String, required: true, unique: true },
   hostname: String,
-  firstSeen: { type: Date, default: Date.now },
-  lastSeen: { type: Date, default: Date.now }
+  first_seen: { type: Date, default: Date.now },
+  last_seen: { type: Date, default: Date.now },
+  status: { type: String, default: "online" }
 });
 
 module.exports = mongoose.model("Agent", AgentSchema);
