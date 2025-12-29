@@ -24,6 +24,10 @@ app.get("/", (req, res) => {
   res.send("Backend is working!");
 });
 
+const commandRoutes = require("./routes/commands");
+app.use("/api/commands", commandRoutes);
+
+
 /* ✅ CONNECT DB + START SERVER */
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
