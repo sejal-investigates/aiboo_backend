@@ -7,22 +7,27 @@ const Command = require("../models/Command");
 
 /* ================== ENROLL ================== */
 router.post("/enroll", async (req, res) => {
-  const { hostname } = req.body;
-  if (!hostname) return res.status(400).json({ error: "hostname required" });
+  try {
+    const { hostname } = req.body;
+    if (!hostname) return res.status(400).json({ error: "hostname required" });
 
-  const agent = await Agent.create({
-    agent_id: crypto.randomUUID(),
-    hostname,
-    status: "online",
-    last_seen: new Date()
-  });
+    const agent = await Agent.create({
+      agent_id: crypto.randomUUID(),
+      hostname,
+      status: "online",
+      last_seen: new Date()
+    });
 
-  res.json({
-    agent_id: agent.agent_id,
-    batch_size: 5,
-    batch_timeout_seconds: 15,
-    command_poll_interval_seconds: 20
-  });
+    res.json({
+      agent_id: agent.agent_id,
+      batch_size: 5,
+      batch_timeout_seconds: 15,
+      command_poll_interval_seconds: 20
+    });
+  } catch (err) {
+    console.error("Enroll error:", err);
+    res.status(500).json({ error: "enroll failed", details: err.message });
+  }
 });
 
 /* ================== HEARTBEAT ================== */
