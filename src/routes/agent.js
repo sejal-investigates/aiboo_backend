@@ -38,17 +38,40 @@ router.post("/heartbeat", async (req, res) => {
   res.json({ ok: true });
 });
 
-/* ================== COMMAND POLL (LOCKED) ================== */
-router.get("/command/poll/:agent_id", async (req, res) => {
+/* ================== TELEMETRY INGEST ================== */
+router.post("/ingest", async (req, res) => {
+  const { agent_id, events } = req.body;
+  
+  if (!agent_id || !events || !Array.isArray(events)) {
+    return res.status(400).json({ error: "agent_id and events[] required" });
+  }
+
+  // Update agent last_seen
+  await Agent.findOneAndUpdate(
+    { agent_id },
+    { last_seen: new Date(), status: "online" }
+  );
+
+  // Save events (you need Event model for this)
+  // await Event.insertMany(events.map(event => ({ ...event, agent_id })));
+  
+  res.json({ ok: true, received: events.length });
+});
+
+/* ================== COMMAND POLL (FIXED) ================== */
+router.get("/command/:agent_id", async (req, res) => {
   try {
+    const agent = await Agent.findOne({ agent_id: req.params.agent_id });
+    if (!agent) return res.status(404).json({ error: "Agent not found" });
+
     const cmd = await Command.findOneAndUpdate(
       {
         agent_id: req.params.agent_id,
         status: "pending"
       },
       {
-        status: "in_progress",
-        started_at: new Date()
+        status: "dispatched",
+        dispatched_at: new Date()
       },
       {
         sort: { created_at: 1 },
@@ -57,31 +80,37 @@ router.get("/command/poll/:agent_id", async (req, res) => {
     );
 
     if (!cmd) {
-      return res.json({ command: null });
+      return res.json({});  // ← EMPTY JSON (no crash!)
     }
 
     res.json({
-      command: cmd.command,
-      id: cmd._id
+      command_id: cmd._id.toString(),
+      payload: cmd.command  // ← Use "payload" instead of "command"
     });
   } catch (err) {
     console.error("Command poll error:", err);
-    res.status(500).json({ error: "poll failed" });
+    res.status(500).json({ error: err.message });
   }
 });
 
-/* ================== COMMAND RESULT ================== */
-router.post("/command/result", async (req, res) => {
-  const { id, output } = req.body;
-  if (!id) return res.status(400).json({ error: "id required" });
+/* ================== COMMAND RESULT (FIXED) ================== */
+router.post("/command/:agent_id/result", async (req, res) => {
+  try {
+    const { command_id, output, status } = req.body;
+    
+    if (!command_id) return res.status(400).json({ error: "command_id required" });
 
-  await Command.findByIdAndUpdate(id, {
-    status: "done",
-    output,
-    completed_at: new Date()
-  });
+    await Command.findByIdAndUpdate(command_id, {
+      status: status || "completed",
+      output: output,
+      completed_at: new Date()
+    });
 
-  res.json({ ok: true });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Command result error:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
