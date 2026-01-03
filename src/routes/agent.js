@@ -90,7 +90,7 @@ router.get("/command/:agent_id", async (req, res) => {
 
     res.json({
       command_id: cmd._id.toString(),
-      payload: cmd.command  // ← Use "payload" instead of "command"
+      payload: cmd.payload  // ← Use "payload" instead of "command"
     });
   } catch (err) {
     console.error("Command poll error:", err);
