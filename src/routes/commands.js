@@ -17,28 +17,31 @@ router.get("/:agent_id", async (req, res) => {
   })));
 });
 
-// agent reports result
 router.post("/result/:id", async (req, res) => {
   console.log("📥 Result endpoint hit");
-  console.log("📥 Request body:", req.body);
-  console.log("📥 Request headers:", req.headers);
+  console.log("📥 Content-Type:", req.headers['content-type']);
   
-  // Check if body exists
-  if (!req.body) {
-    console.error("❌ req.body is undefined!");
-    return res.status(400).json({ error: "No request body" });
+  let body = req.body;
+  
+  // If content-type is text/plain, parse it manually
+  if (req.headers['content-type'] === 'text/plain') {
+    console.log("⚠️ Agent sent text/plain, parsing manually");
+    try {
+      body = JSON.parse(req.body);
+    } catch (e) {
+      console.error("❌ Failed to parse text as JSON:", e);
+      return res.status(400).json({ error: "Invalid JSON in text/plain body" });
+    }
   }
   
-  // Check if body has the expected fields
-  if (req.body.exit_code === undefined || req.body.output === undefined) {
-    console.error("❌ Missing fields in body:", req.body);
-    return res.status(400).json({ 
-      error: "Missing exit_code or output", 
-      received: req.body 
-    });
+  console.log("📥 Parsed body:", body);
+  
+  if (!body || body.exit_code === undefined || body.output === undefined) {
+    console.error("❌ Missing fields:", body);
+    return res.status(400).json({ error: "Missing exit_code or output", received: body });
   }
   
-  const { exit_code, output } = req.body;
+  const { exit_code, output } = body;
   
   try {
     await Command.findByIdAndUpdate(req.params.id, {
@@ -48,7 +51,7 @@ router.post("/result/:id", async (req, res) => {
       completed_at: new Date()
     });
     
-    console.log("✅ Result saved successfully");
+    console.log("✅ Result saved");
     res.json({ ok: true });
     
   } catch (error) {
