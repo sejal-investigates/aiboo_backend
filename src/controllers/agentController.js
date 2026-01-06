@@ -22,8 +22,8 @@ exports.enroll = async (req, res) => {
 
   res.json({
     agent_id: agent.agentId,
-    batch_size: 5,
-    batch_timeout_seconds: 15,
-    command_poll_interval_seconds: 20
+    batch_size: 10,  // ← Match your config: 10 (not 5)
+    batch_timeout_seconds: 60,  // ← Match: 60 (not 15)
+    command_poll_interval_seconds: 30  // ← Match: 30 (not 20)
   });
 };

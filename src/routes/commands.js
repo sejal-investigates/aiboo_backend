@@ -9,27 +9,52 @@ router.get("/:agent_id", async (req, res) => {
     status: "pending"
   });
   
-  // Map 'command' to 'payload' for agent
   res.json(cmds.map(cmd => ({
     _id: cmd._id,
     agent_id: cmd.agent_id,
-    payload: cmd.command,  // ← 'command' becomes 'payload'
+    payload: cmd.command,
     status: cmd.status
   })));
 });
 
-// agent reports result - FIX THIS!
+// agent reports result
 router.post("/result/:id", async (req, res) => {
-  const { exit_code, output } = req.body;  // ← EXTRACT from body
+  console.log("📥 Result endpoint hit");
+  console.log("📥 Request body:", req.body);
+  console.log("📥 Request headers:", req.headers);
   
-  await Command.findByIdAndUpdate(req.params.id, {
-    status: "done",
-    exit_code: exit_code,      // ← Save exit_code
-    output: output,            // ← Save output (NOT result: req.body)
-    completed_at: new Date()   // ← Save completion time
-  });
+  // Check if body exists
+  if (!req.body) {
+    console.error("❌ req.body is undefined!");
+    return res.status(400).json({ error: "No request body" });
+  }
   
-  res.json({ ok: true });
+  // Check if body has the expected fields
+  if (req.body.exit_code === undefined || req.body.output === undefined) {
+    console.error("❌ Missing fields in body:", req.body);
+    return res.status(400).json({ 
+      error: "Missing exit_code or output", 
+      received: req.body 
+    });
+  }
+  
+  const { exit_code, output } = req.body;
+  
+  try {
+    await Command.findByIdAndUpdate(req.params.id, {
+      status: "done",
+      exit_code: exit_code,
+      output: output,
+      completed_at: new Date()
+    });
+    
+    console.log("✅ Result saved successfully");
+    res.json({ ok: true });
+    
+  } catch (error) {
+    console.error("❌ Database error:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 module.exports = router;
