@@ -8,15 +8,27 @@ router.get("/:agent_id", async (req, res) => {
     agent_id: req.params.agent_id,
     status: "pending"
   });
-  res.json(cmds);
+  
+  // Map 'command' to 'payload' for agent
+  res.json(cmds.map(cmd => ({
+    _id: cmd._id,
+    agent_id: cmd.agent_id,
+    payload: cmd.command,  // ← 'command' becomes 'payload'
+    status: cmd.status
+  })));
 });
 
-// agent reports result
+// agent reports result - FIX THIS!
 router.post("/result/:id", async (req, res) => {
+  const { exit_code, output } = req.body;  // ← EXTRACT from body
+  
   await Command.findByIdAndUpdate(req.params.id, {
     status: "done",
-    result: req.body
+    exit_code: exit_code,      // ← Save exit_code
+    output: output,            // ← Save output (NOT result: req.body)
+    completed_at: new Date()   // ← Save completion time
   });
+  
   res.json({ ok: true });
 });
 
