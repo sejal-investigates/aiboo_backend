@@ -7,6 +7,7 @@ const cors = require("cors");
 const eventsRoutes = require("./routes/events");
 const dashboardRoutes = require("./routes/dashboard");
 const agentRoutes = require("./routes/agent");
+const commandRoutes = require("./routes/commands");  // ← IMPORT HERE
 
 const app = express();
 
@@ -18,15 +19,12 @@ app.use(express.json());
 app.use("/agent", agentRoutes);
 app.use("/api/events", eventsRoutes);
 app.use("/api", dashboardRoutes);
+app.use("/api/commands", commandRoutes);  // ← USE IT HERE (BEFORE "/" route)
 
 /* ✅ TEST ROUTE */
 app.get("/", (req, res) => {
   res.send("Backend is working!");
 });
-
-const commandRoutes = require("./routes/commands");
-app.use("/api/commands", commandRoutes);
-
 
 /* ✅ CONNECT DB + START SERVER */
 mongoose.connect(process.env.MONGO_URI)
