@@ -21,43 +21,72 @@ router.post("/result/:id", async (req, res) => {
   console.log("📥 Result endpoint hit");
   console.log("📥 Content-Type:", req.headers['content-type']);
   
-  let body = req.body;
+  // Get RAW body before Express parses it
+  let rawBody = '';
+  req.on('data', chunk => {
+    rawBody += chunk.toString();
+  });
   
-  // If content-type is text/plain, parse it manually
-  if (req.headers['content-type'] === 'text/plain') {
-    console.log("⚠️ Agent sent text/plain, parsing manually");
-    try {
-      body = JSON.parse(req.body);
-    } catch (e) {
-      console.error("❌ Failed to parse text as JSON:", e);
-      return res.status(400).json({ error: "Invalid JSON in text/plain body" });
+  req.on('end', async () => {
+    console.log("📥 RAW Body received:", rawBody);
+    console.log("📥 Body length:", rawBody.length);
+    
+    let body;
+    
+    if (req.headers['content-type'] === 'text/plain') {
+      try {
+        console.log("⚠️ Trying to parse as JSON:", rawBody);
+        body = JSON.parse(rawBody);
+      } catch (e) {
+        console.error("❌ Failed to parse JSON. Raw:", rawBody);
+        console.error("❌ Error:", e.message);
+        
+        // Try to fix common issues
+        try {
+          // Maybe it's URL-encoded?
+          const decoded = decodeURIComponent(rawBody);
+          console.log("🔧 URL-decoded:", decoded);
+          body = JSON.parse(decoded);
+        } catch (e2) {
+          return res.status(400).json({ 
+            error: "Invalid JSON", 
+            raw: rawBody,
+            length: rawBody.length 
+          });
+        }
+      }
+    } else {
+      body = req.body;
     }
-  }
-  
-  console.log("📥 Parsed body:", body);
-  
-  if (!body || body.exit_code === undefined || body.output === undefined) {
-    console.error("❌ Missing fields:", body);
-    return res.status(400).json({ error: "Missing exit_code or output", received: body });
-  }
-  
-  const { exit_code, output } = body;
-  
-  try {
-    await Command.findByIdAndUpdate(req.params.id, {
-      status: "done",
-      exit_code: exit_code,
-      output: output,
-      completed_at: new Date()
-    });
     
-    console.log("✅ Result saved");
-    res.json({ ok: true });
+    console.log("📥 Parsed body:", body);
     
-  } catch (error) {
-    console.error("❌ Database error:", error);
-    res.status(500).json({ error: error.message });
-  }
+    if (!body || body.exit_code === undefined || body.output === undefined) {
+      return res.status(400).json({ 
+        error: "Missing exit_code or output", 
+        received: body,
+        raw: rawBody 
+      });
+    }
+    
+    const { exit_code, output } = body;
+    
+    try {
+      await Command.findByIdAndUpdate(req.params.id, {
+        status: "done",
+        exit_code: exit_code,
+        output: output,
+        completed_at: new Date()
+      });
+      
+      console.log("✅ Result saved");
+      res.json({ ok: true });
+      
+    } catch (error) {
+      console.error("❌ Database error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 });
 
 module.exports = router;
