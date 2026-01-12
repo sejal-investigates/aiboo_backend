@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/eventsController");
-
 // =============== EXISTING ROUTES ===============
 // GET all events
 router.get("/", controller.getAllEvents);

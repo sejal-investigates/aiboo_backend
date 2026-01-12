@@ -54,13 +54,10 @@ class AgentController {
       { last_seen: new Date(), status: "online" }
     );
 
-    // TODO: Save events if Event model exists
-    // await Event.insertMany(events.map(event => ({ ...event, agent_id })));
-    
     res.json({ ok: true, received: events.length });
   }
 
-  /* ================== COMMAND POLL (FIXED) ================== */
+  /* ================== COMMAND POLL ================== */
   static async commandPoll(req, res) {
     try {
       const agent = await Agent.findOne({ agent_id: req.params.agent_id });
@@ -95,7 +92,7 @@ class AgentController {
     }
   }
 
-  /* ================== COMMAND RESULT (FIXED) ================== */
+  /* ================== COMMAND RESULT ================== */
   static async commandResult(req, res) {
     try {
       const { command_id, output, status } = req.body;

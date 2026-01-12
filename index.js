@@ -4,10 +4,13 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
-const eventsRoutes = require("./routes/events");
-const dashboardRoutes = require("./routes/dashboard");
-const agentRoutes = require("./routes/agent");
-const commandRoutes = require("./routes/commands");
+const eventsRoutes = require("./src/routes/events");
+const dashboardRoutes = require("./src/routes/dashboard");
+const agentRoutes = require("./src/routes/agent");
+const commandRoutes = require("./src/routes/commands");
+// ADD THESE MISSING IMPORTS:
+const assistantRoutes = require("./src/routes/assistant");
+const inventoryRoutes = require("./src/routes/inventory");
 
 const app = express();
 
@@ -23,11 +26,14 @@ app.use((req, res, next) => {
 app.use(cors());
 app.use(express.json());
 
-/* ✅ ROUTES */
+/* ✅ ROUTES - FIXED WITH ALL ROUTES */
 app.use("/agent", agentRoutes);
 app.use("/api/events", eventsRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api/commands", commandRoutes);
+// ADD THESE MISSING ROUTES:
+app.use("/api/assistant", assistantRoutes);
+app.use("/api/inventory", inventoryRoutes);
 
 /* ✅ TEST ROUTE */
 app.get("/", (req, res) => {

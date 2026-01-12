@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const InventoryController = require("../src/controllers/inventoryController");
-
 // Get latest inventory for an agent
 router.get("/:agent_id/latest", InventoryController.getLatestInventory);
 
